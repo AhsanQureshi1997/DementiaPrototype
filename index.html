@@ -192,7 +192,7 @@
 
       <div class="grid">
         <div class="card panel">
-          <div class="eyebrow">Latest status</div>
+          <div class="eyebrow">Results from latest saved check-in</div>
           <div id="latestBanner"></div>
           <div class="box" style="margin-top:12px">
             <h3 style="margin-bottom:10px">What to do now</h3>
@@ -472,9 +472,9 @@ function goCheckinStep(step){
     for(const q of QUESTIONS){ if(!draftAnswers[q.key]) return alert('Please answer all five FAM-CAM questions before continuing.'); }
   }
   currentCheckinStep = step;
-  currentCheckinStep = 1;
   renderQuestions();
 }
+
 function setAnswer(k,v){ draftAnswers[k]=v; const notes = document.getElementById('caregiverNotes')?.value || ''; renderQuestions(); const noteEl = document.getElementById('caregiverNotes'); if(noteEl) noteEl.value = notes; }
 function toggleFlag(v){ draftFlags.has(v)?draftFlags.delete(v):draftFlags.add(v); const notes=document.getElementById('caregiverNotes')?.value||''; renderQuestions(); document.getElementById('caregiverNotes').value=notes; }
 function toggleCause(v){ draftCauses.has(v)?draftCauses.delete(v):draftCauses.add(v); const notes=document.getElementById('caregiverNotes')?.value||''; renderQuestions(); document.getElementById('caregiverNotes').value=notes; }
@@ -499,8 +499,14 @@ function submitCheckin(){
   for(const q of QUESTIONS){ if(!draftAnswers[q.key]) return alert('Please answer all five FAM-CAM questions.'); }
   const notes = document.getElementById('caregiverNotes').value.trim();
   const entry = { ts: new Date().toISOString(), answers: {...draftAnswers}, flags:[...draftFlags], causes:[...draftCauses], notes, risk: calcRisk(draftAnswers, [...draftFlags]) };
-  patient.entries.push(entry); saveDB(); resetCheckinForm(); renderCaregiver(); alert('Check-in saved to patient history.');
+  patient.entries.push(entry);
+  saveDB();
+  resetCheckinForm();
+  renderCaregiver();
+  const latestBanner = document.getElementById('latestBanner');
+  if(latestBanner){ latestBanner.scrollIntoView({behavior:'smooth', block:'start'}); }
 }
+
 function copyDoctorNote(){ navigator.clipboard.writeText(document.getElementById('doctorNote').value); }
 function copyDocSummary(){ navigator.clipboard.writeText(document.getElementById('docSummary').value); }
 function renderDoctor(){
