@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Outpatient Delirium Monitoring Portal Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#17324d; --navy2:#244a70; --blue:#3f7fd6; --blueBg:#eaf2fd; --teal:#2a9d8f; --tealBg:#e3f6f4;
+    --amber:#c77d19; --amberBg:#fff3df; --red:#c44536; --redBg:#fdecea; --green:#2f855a; --greenBg:#e8f6ee;
+    --text:#14212e; --muted:#607080; --border:#dce5ee; --bg:#f5f7fb; --white:#fff; --radius:16px; --shadow:0 12px 40px rgba(18,37,63,.08);
+  }
+  body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+  .app{max-width:1200px;margin:0 auto;min-height:100vh;padding:22px}
+  .hidden{display:none!important}
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .hero{padding:28px 30px;background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;margin-bottom:18px}
+  .hero h1{font-family:Lora,serif;font-size:34px;line-height:1.2;margin-bottom:8px}
+  .hero p{color:rgba(255,255,255,.82);max-width:850px}
+  .hero .sub{margin-top:10px;font-size:13px;color:rgba(255,255,255,.62)}
+  .grid{display:grid;gap:18px}
+  .grid.two{grid-template-columns:1.1fr .9fr}
+  .grid.login{grid-template-columns:1fr 1fr}
+  .panel{padding:24px}
+  .muted{color:var(--muted)}
+  .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);font-weight:600;margin-bottom:8px}
+  h2{font-family:Lora,serif;font-size:28px;line-height:1.2;margin-bottom:8px}
+  h3{font-size:18px;margin-bottom:12px}
+  .list{display:grid;gap:10px;margin-top:14px}
+  .bullet{display:flex;gap:10px;align-items:flex-start}
+  .dot{width:8px;height:8px;border-radius:50%;margin-top:8px;background:var(--blue);flex:0 0 auto}
+  .tag{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .tag.red{background:var(--redBg);color:var(--red)} .tag.amber{background:var(--amberBg);color:var(--amber)} .tag.green{background:var(--greenBg);color:var(--green)}
+  .tag.blue{background:var(--blueBg);color:var(--blue)}
+  .roleBtn{padding:18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;text-align:left;transition:.15s}
+  .roleBtn:hover,.roleBtn.sel{border-color:var(--teal);background:var(--tealBg)}
+  .roleBtn strong{display:block;font-size:16px;margin-bottom:4px}
+  .formRow{display:grid;gap:14px;margin-top:16px}
+  label{font-size:13px;font-weight:600;color:var(--muted)}
+  input,select,textarea{width:100%;padding:12px 13px;border:1.5px solid var(--border);border-radius:12px;font:inherit;background:#fff;color:var(--text)}
+  textarea{min-height:88px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  button{font:inherit;cursor:pointer;border:none}
+  .btn{padding:12px 18px;border-radius:12px;font-weight:600}
+  .btn.primary{background:var(--navy);color:#fff}
+  .btn.primary:hover{background:var(--navy2)}
+  .btn.secondary{background:#fff;color:var(--text);border:1.5px solid var(--border)}
+  .btn.soft{background:var(--blueBg);color:var(--navy)}
+  .hint{margin-top:10px;padding:12px 13px;border-radius:12px;background:var(--blueBg);font-size:14px;color:var(--navy2)}
+  .loginCreds{display:grid;gap:10px;margin-top:12px}
+  .loginCreds code{background:#f1f5f9;padding:2px 6px;border-radius:6px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;margin-bottom:16px}
+  .topbar h2{font-size:24px;margin:0}
+  .pillRow{display:flex;gap:8px;flex-wrap:wrap}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .stat{padding:18px;border-radius:16px;border:1px solid var(--border);background:#fff}
+  .stat .num{font-size:28px;font-weight:700;line-height:1.1;margin-top:6px}
+  .tableWrap{overflow:auto}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:top}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+  tr:hover td{background:#fbfdff}
+  .linkBtn{background:none;border:none;color:var(--blue);font-weight:600;padding:0}
+  .layout{display:grid;grid-template-columns:320px 1fr;gap:18px}
+  .sideList{display:grid;gap:10px}
+  .patientCard{padding:14px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer;background:#fff}
+  .patientCard.active,.patientCard:hover{border-color:var(--teal);background:var(--tealBg)}
+  .small{font-size:13px;color:var(--muted)}
+  .detailGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .box{padding:18px;border:1px solid var(--border);border-radius:16px;background:#fff}
+  .kv{display:grid;grid-template-columns:170px 1fr;gap:8px;font-size:14px;margin-bottom:8px}
+  .timeline{display:grid;gap:10px}
+  .entry{padding:13px;border:1px solid var(--border);border-radius:14px;background:#fbfdff}
+  .entryTop{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+  .note{font-size:13px;color:var(--muted)}
+  .question{padding:16px;border:1.5px solid var(--border);border-radius:16px;margin-bottom:12px}
+  .question.answered{border-color:var(--teal)}
+  .qtitle{font-weight:600;margin-bottom:5px}
+  .qhint{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .opts{display:grid;gap:8px}
+  .opt{padding:11px 13px;border:1.5px solid var(--border);border-radius:12px;background:#fff;text-align:left}
+  .opt.sel,.opt:hover{border-color:var(--teal);background:var(--tealBg)}
+  .alert{padding:16px 18px;border-radius:16px;margin-bottom:14px;border:1.5px solid var(--border)}
+  .alert.red{background:var(--redBg);border-color:#f3c7c0}.alert.amber{background:var(--amberBg);border-color:#f4d7a9}.alert.green{background:var(--greenBg);border-color:#bfe6cb}
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}
+  .footerText{font-size:12px;color:var(--muted);text-align:center;padding:18px}
+  @media (max-width:960px){.grid.two,.split,.layout,.detailGrid,.grid.login,.stats{grid-template-columns:1fr}.app{padding:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <section id="loginView">
+    <div class="hero card">
+      <h1>Outpatient Delirium Monitoring Portal</h1>
+      <p>Prototype for caregiver-reported delirium screening, longitudinal monitoring, and clinician review. This keeps the original family guide structure, but turns it into a workflow tool with saved check-ins, a dummy patient login, and a doctor dashboard.</p>
+      <div class="sub">Prototype only. No real PHI. Built for discussion with Dr. Nimit Agarwal.</div>
+    </div>
+
+    <div class="grid login">
+      <div class="card panel">
+        <div class="eyebrow">Choose portal</div>
+        <h2>Sign in</h2>
+        <p class="muted">Use one of the demo roles below. All data is stored locally in the browser for prototype purposes.</p>
+
+        <div class="list" id="roleButtons">
+          <button class="roleBtn sel" data-role="caregiver" onclick="selectRole('caregiver', this)">
+            <strong>Caregiver portal</strong>
+            <span class="small">Complete check-ins, review saved entries, and generate a doctor-ready note.</span>
+          </button>
+          <button class="roleBtn" data-role="doctor" onclick="selectRole('doctor', this)">
+            <strong>Clinician portal</strong>
+            <span class="small">View assigned patients, see new red or amber alerts, and review trends.</span>
+          </button>
+        </div>
+
+        <div class="formRow">
+          <div>
+            <label id="idLabel">Patient ID</label>
+            <input id="loginId" value="PT-10021" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input id="loginPassword" type="password" value="delirium123" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" onclick="login()">Enter portal</button>
+          <button class="btn secondary" onclick="resetDemoData()">Reset demo data</button>
+        </div>
+        <div class="hint" id="loginHint">Caregiver demo credentials loaded.</div>
+      </div>
+
+      <div class="card panel">
+        <div class="eyebrow">How this fits workflow</div>
+        <h3>Why this is stronger than a standalone family guide</h3>
+        <div class="list">
+          <div class="bullet"><div class="dot"></div><div>Families can submit structured delirium observations between visits instead of vague phone messages.</div></div>
+          <div class="bullet"><div class="dot"></div><div>Clinicians can review urgency, symptom pattern, and daily history in one place.</div></div>
+          <div class="bullet"><div class="dot"></div><div>The doctor note stays copy-pasteable for an EMR workflow.</div></div>
+        </div>
+        <div class="loginCreds">
+          <div><strong>Caregiver demo</strong><br><code>PT-10021</code> / <code>delirium123</code></div>
+          <div><strong>Doctor demo</strong><br><code>DR-AGARWAL</code> / <code>clinicdemo</code></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="caregiverView" class="hidden">
+    <div class="topbar card">
+      <div>
+        <div class="eyebrow">Caregiver portal</div>
+        <h2 id="cgPatientName">Patient</h2>
+        <div class="small" id="cgMeta"></div>
+      </div>
+      <div class="actions">
+        <button class="btn secondary" onclick="showView('loginView')">Log out</button>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="grid">
+        <div class="card panel">
+          <div class="eyebrow">Today’s delirium check-in</div>
+          <h3>Family FAM-CAM screen</h3>
+          <p class="muted">Answer based on how your loved one is acting right now compared with usual baseline.</p>
+          <div id="questionsArea"></div>
+          <div class="actions">
+            <button class="btn primary" onclick="submitCheckin()">Save check-in</button>
+            <button class="btn secondary" onclick="resetCheckinForm()">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card panel">
+          <div class="eyebrow">Latest status</div>
+          <div id="latestBanner"></div>
+          <div class="box" style="margin-top:12px">
+            <h3 style="margin-bottom:10px">What to do now</h3>
+            <div id="latestActions" class="list"></div>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <div class="eyebrow">Doctor-ready summary</div>
+          <textarea id="doctorNote"></textarea>
+          <div class="actions">
+            <button class="btn soft" onclick="copyDoctorNote()">Copy note</button>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <div class="eyebrow">Saved check-ins</div>
+          <div id="caregiverTimeline" class="timeline"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="doctorView" class="hidden">
+    <div class="topbar card">
+      <div>
+        <div class="eyebrow">Clinician portal</div>
+        <h2>Dr. Nimit Agarwal Dashboard</h2>
+        <div class="small">Dummy patient panel for outpatient delirium monitoring prototype</div>
+      </div>
+      <div class="actions">
+        <button class="btn secondary" onclick="showView('loginView')">Log out</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat card"><div class="small">Assigned patients</div><div class="num" id="statPatients">0</div></div>
+      <div class="stat card"><div class="small">Red alerts</div><div class="num" id="statRed">0</div></div>
+      <div class="stat card"><div class="small">Amber alerts</div><div class="num" id="statAmber">0</div></div>
+      <div class="stat card"><div class="small">New check-ins (7d)</div><div class="num" id="statRecent">0</div></div>
+    </div>
+
+    <div class="layout" style="margin-top:18px">
+      <div class="card panel">
+        <div class="eyebrow">Patient list</div>
+        <div id="doctorPatientList" class="sideList"></div>
+      </div>
+
+      <div class="grid">
+        <div class="card panel">
+          <div class="eyebrow">Selected patient</div>
+          <div class="detailGrid">
+            <div class="box">
+              <h3 id="docPatientName">Patient</h3>
+              <div class="kv"><strong>MRN</strong><span id="docMRN"></span></div>
+              <div class="kv"><strong>Caregiver</strong><span id="docCaregiver"></span></div>
+              <div class="kv"><strong>Baseline risk</strong><span id="docRisk"></span></div>
+              <div class="kv"><strong>Last submission</strong><span id="docLastSubmission"></span></div>
+              <div class="kv"><strong>Status</strong><span id="docStatus"></span></div>
+            </div>
+            <div class="box">
+              <h3>Latest clinical summary</h3>
+              <textarea id="docSummary"></textarea>
+              <div class="actions"><button class="btn soft" onclick="copyDocSummary()">Copy summary</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <div class="eyebrow">Recent check-ins</div>
+          <div class="tableWrap">
+            <table>
+              <thead><tr><th>Date</th><th>Risk</th><th>Key findings</th><th>Likely causes</th></tr></thead>
+              <tbody id="doctorEntriesTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footerText">Prototype only. Local browser storage only. No real authentication or protected health information.</div>
+</div>
+
+<script>
+const DEFAULT_DATA = {
+  patients: [
+    {
+      id: 'PT-10021',
+      password: 'delirium123',
+      name: 'Margaret Lewis',
+      dob: '03/14/1941',
+      mrn: 'UA-481205',
+      provider: 'Dr. Nimit Agarwal',
+      caregiverName: 'Anna Lewis',
+      caregiverRelation: 'Daughter',
+      caregiverPhone: '(602) 555-0142',
+      baselineRisk: 'Recent hospitalization and mild cognitive impairment',
+      entries: [
+        {
+          ts: '2026-04-10T09:12:00',
+          answers: {q1:'yes', q2:'yes', q3:'yes', q4:'drowsy', q5:'yes'},
+          flags: ['fever or chills','symptoms are getting worse'],
+          causes: ['possible infection','not drinking enough / dehydration'],
+          notes: 'More sleepy than usual and hard to keep focused after discharge.',
+          risk: 'red'
+        },
+        {
+          ts: '2026-04-13T11:20:00',
+          answers: {q1:'yes', q2:'yes', q3:'no', q4:'drowsy', q5:'yes'},
+          flags: [],
+          causes: ['new medication or recent medication change'],
+          notes: 'Still drifting off mid-conversation but a little improved.',
+          risk: 'amber'
+        }
+      ]
+    },
+    {
+      id: 'PT-10048', password: 'familydemo', name: 'Samuel Ortiz', dob: '08/27/1938', mrn: 'UA-481644', provider: 'Dr. Nimit Agarwal', caregiverName: 'Maria Ortiz', caregiverRelation: 'Spouse', caregiverPhone: '(602) 555-0167', baselineRisk: 'Polypharmacy and recent ED visit',
+      entries: [
+        { ts: '2026-04-14T15:30:00', answers: {q1:'no', q2:'no', q3:'no', q4:'no', q5:'no'}, flags: [], causes: [], notes: 'Back to baseline today.', risk:'green'}
+      ]
+    },
+    {
+      id: 'PT-10077', password: 'familydemo', name: 'Helen Brooks', dob: '11/02/1936', mrn: 'UA-482011', provider: 'Dr. Nimit Agarwal', caregiverName: 'Jason Brooks', caregiverRelation: 'Son', caregiverPhone: '(602) 555-0191', baselineRisk: 'Frailty and insomnia',
+      entries: [
+        { ts: '2026-04-15T08:05:00', answers: {q1:'yes', q2:'yes', q3:'yes', q4:'agitated', q5:'yes'}, flags: ['they cannot safely care for themselves right now'], causes: ['severe sleep deprivation'], notes: 'Restless overnight and talking to people not there.', risk:'red'}
+      ]
+    }
+  ],
+  doctors: [
+    { id: 'DR-AGARWAL', password: 'clinicdemo', name: 'Dr. Nimit Agarwal', patientIds: ['PT-10021','PT-10048','PT-10077'] }
+  ]
+};
+
+const QUESTIONS = [
+  {key:'q1', title:'Did the confusion come on suddenly, over hours or a day or two?', hint:'Delirium appears fast. Dementia usually develops slowly.', options:[['yes','Yes, sudden change'],['no','No, more gradual'],['unsure','Not sure']]},
+  {key:'q2', title:'Is your loved one having trouble paying attention?', hint:'Examples: getting easily distracted, losing track, blank staring.', options:[['yes','Yes, noticeably worse than usual'],['no','No, attention seems normal'],['unsure','Not sure']]},
+  {key:'q3', title:'Is their thinking disorganized or confused?', hint:'Examples: rambling, incoherent, jumping between unrelated topics.', options:[['yes','Yes, confused or disorganized'],['no','No, clear and coherent'],['unsure','Not sure']]},
+  {key:'q4', title:'Is their level of alertness altered?', hint:'Includes being more drowsy than usual or unusually agitated.', options:[['drowsy','More drowsy / hard to wake'],['agitated','More agitated / restless'],['no','Alertness seems normal']]},
+  {key:'q5', title:'Does the confusion come and go throughout the day?', hint:'Delirium often fluctuates.', options:[['yes','Yes, it comes and goes'],['no','No, constant'],['unsure','Not sure']]}
+];
+const FLAG_OPTIONS = ['fever or chills','recent fall or head injury','difficulty breathing','severe pain they cannot communicate well','they cannot safely care for themselves right now','missed medications or wrong dose','symptoms are getting worse'];
+const CAUSE_OPTIONS = ['possible infection','new medication or recent medication change','not drinking enough / dehydration','severe sleep deprivation','cause unknown'];
+
+let db = loadDB();
+let currentRole = 'caregiver';
+let currentPatientId = null;
+let currentDoctorId = null;
+let currentDoctorPatientId = null;
+let draftAnswers = {};
+let draftFlags = new Set();
+let draftCauses = new Set();
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem('deliriumPortalPrototypeDB');
+    return raw ? JSON.parse(raw) : structuredClone(DEFAULT_DATA);
+  }catch(e){ return structuredClone(DEFAULT_DATA); }
+}
+function saveDB(){ localStorage.setItem('deliriumPortalPrototypeDB', JSON.stringify(db)); }
+function resetDemoData(){ db = structuredClone(DEFAULT_DATA); saveDB(); alert('Demo data reset.'); }
+function showView(id){ ['loginView','caregiverView','doctorView'].forEach(v=>document.getElementById(v).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+function selectRole(role, btn){ currentRole = role; document.querySelectorAll('#roleButtons .roleBtn').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel');
+  if(role==='caregiver'){ document.getElementById('idLabel').textContent = 'Patient ID'; document.getElementById('loginId').value='PT-10021'; document.getElementById('loginPassword').value='delirium123'; document.getElementById('loginHint').textContent='Caregiver demo credentials loaded.'; }
+  else { document.getElementById('idLabel').textContent = 'Doctor ID'; document.getElementById('loginId').value='DR-AGARWAL'; document.getElementById('loginPassword').value='clinicdemo'; document.getElementById('loginHint').textContent='Clinician demo credentials loaded.'; }
+}
+function login(){
+  const id = document.getElementById('loginId').value.trim();
+  const pw = document.getElementById('loginPassword').value.trim();
+  if(currentRole==='caregiver'){
+    const patient = db.patients.find(p=>p.id===id && p.password===pw);
+    if(!patient) return alert('Demo caregiver login not recognized.');
+    currentPatientId = patient.id; renderCaregiver(); showView('caregiverView');
+  } else {
+    const doctor = db.doctors.find(d=>d.id===id && d.password===pw);
+    if(!doctor) return alert('Demo doctor login not recognized.');
+    currentDoctorId = doctor.id; currentDoctorPatientId = doctor.patientIds[0]; renderDoctor(); showView('doctorView');
+  }
+}
+function fmtDate(ts){ return new Date(ts).toLocaleString([], {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'}); }
+function riskTag(risk){ return `<span class="tag ${risk}">${risk.toUpperCase()}</span>`; }
+function getPatient(id){ return db.patients.find(p=>p.id===id); }
+function latestEntry(patient){ return [...patient.entries].sort((a,b)=>new Date(b.ts)-new Date(a.ts))[0] || null; }
+function calcRisk(a, flags){
+  const urgent = flags.some(f => ['fever or chills','recent fall or head injury','difficulty breathing','severe pain they cannot communicate well','they cannot safely care for themselves right now','symptoms are getting worse'].includes(f));
+  const core = (a.q1==='yes' || a.q1==='unsure') && a.q2==='yes' && (a.q3==='yes' || a.q4!=='no');
+  if(urgent && core) return 'red';
+  if(core) return 'amber';
+  if(a.q2==='yes' || a.q3==='yes' || a.q4!=='no') return 'amber';
+  return 'green';
+}
+function buildDoctorNote(patient, entry){
+  return `Delirium Screening (Family – FAM-CAM)\n\nPatient: ${patient.name} (${patient.mrn})\nSubmitted by: ${patient.caregiverName} (${patient.caregiverRelation})\nDate: ${fmtDate(entry.ts)}\n\nAcute onset: ${entry.answers.q1}\nInattention: ${entry.answers.q2}\nDisorganized thinking: ${entry.answers.q3}\nAltered alertness: ${entry.answers.q4}\nFluctuation: ${entry.answers.q5}\n\nUrgency flags: ${entry.flags.length ? entry.flags.join(', ') : 'none noted'}\nPossible causes: ${entry.causes.length ? entry.causes.join(', ') : 'none identified'}\nCaregiver notes: ${entry.notes || 'none'}\n\nRisk level: ${entry.risk.toUpperCase()}\nSuggested workflow: ${entry.risk==='red' ? 'Urgent same-day evaluation / ER decision support.' : entry.risk==='amber' ? 'Review today and consider same-day call or visit.' : 'Continue monitoring.'}`;
+}
+function getActions(risk){
+  if(risk==='red') return ['Urgent medical evaluation today','Do not leave patient alone if unsafe','Review medication changes and possible infection','Use summary below for clinician communication'];
+  if(risk==='amber') return ['Contact clinic today','Monitor for worsening symptoms','Check hydration, sleep, and recent medication changes','Continue daily check-ins'];
+  return ['No clear delirium pattern right now','Continue daily monitoring','Use log to track changes after discharge'];
+}
+function renderQuestions(){
+  const area = document.getElementById('questionsArea');
+  area.innerHTML = QUESTIONS.map(q => `
+    <div class="question ${draftAnswers[q.key] ? 'answered' : ''}">
+      <div class="qtitle">${q.title}</div>
+      <div class="qhint">${q.hint}</div>
+      <div class="opts">${q.options.map(([v,l]) => `<button class="opt ${draftAnswers[q.key]===v?'sel':''}" onclick="setAnswer('${q.key}','${v}')">${l}</button>`).join('')}</div>
+    </div>`).join('') + `
+    <div class="question">
+      <div class="qtitle">Urgency factors</div>
+      <div class="qhint">Select any that apply right now.</div>
+      <div class="opts">${FLAG_OPTIONS.map(v => `<button class="opt ${draftFlags.has(v)?'sel':''}" onclick="toggleFlag('${v.replace(/'/g,"\\'")}')">${v}</button>`).join('')}</div>
+    </div>
+    <div class="question">
+      <div class="qtitle">Possible causes</div>
+      <div class="qhint">Select anything that might explain the change.</div>
+      <div class="opts">${CAUSE_OPTIONS.map(v => `<button class="opt ${draftCauses.has(v)?'sel':''}" onclick="toggleCause('${v.replace(/'/g,"\\'")}')">${v}</button>`).join('')}</div>
+    </div>
+    <div class="question">
+      <div class="qtitle">Caregiver notes</div>
+      <div class="qhint">Add anything the clinic should know.</div>
+      <textarea id="caregiverNotes" placeholder="Example: more confused at night, missed two meals, hard to wake this morning."></textarea>
+    </div>`;
+}
+function setAnswer(k,v){ draftAnswers[k]=v; const notes = document.getElementById('caregiverNotes')?.value || ''; renderQuestions(); const noteEl = document.getElementById('caregiverNotes'); if(noteEl) noteEl.value = notes; }
+function toggleFlag(v){ draftFlags.has(v)?draftFlags.delete(v):draftFlags.add(v); const notes=document.getElementById('caregiverNotes')?.value||''; renderQuestions(); document.getElementById('caregiverNotes').value=notes; }
+function toggleCause(v){ draftCauses.has(v)?draftCauses.delete(v):draftCauses.add(v); const notes=document.getElementById('caregiverNotes')?.value||''; renderQuestions(); document.getElementById('caregiverNotes').value=notes; }
+function resetCheckinForm(){ draftAnswers={}; draftFlags=new Set(); draftCauses=new Set(); renderQuestions(); }
+function renderCaregiver(){
+  const patient = getPatient(currentPatientId); const latest = latestEntry(patient);
+  document.getElementById('cgPatientName').textContent = patient.name;
+  document.getElementById('cgMeta').textContent = `Patient ID ${patient.id} · ${patient.dob} · Caregiver: ${patient.caregiverName} (${patient.caregiverRelation})`;
+  renderQuestions();
+  if(latest){
+    document.getElementById('latestBanner').innerHTML = `<div class="alert ${latest.risk}"><strong>Latest status:</strong> ${riskTag(latest.risk)}<div class="small" style="margin-top:8px">Last submitted ${fmtDate(latest.ts)}</div></div>`;
+    document.getElementById('doctorNote').value = buildDoctorNote(patient, latest);
+  } else {
+    document.getElementById('latestBanner').innerHTML = `<div class="alert green"><strong>No saved check-ins yet.</strong><div class="small" style="margin-top:8px">Complete today’s screen to start the log.</div></div>`;
+    document.getElementById('doctorNote').value = '';
+  }
+  document.getElementById('latestActions').innerHTML = (latest ? getActions(latest.risk) : ['Complete first check-in']).map(t=>`<div class="bullet"><div class="dot"></div><div>${t}</div></div>`).join('');
+  document.getElementById('caregiverTimeline').innerHTML = patient.entries.length ? [...patient.entries].sort((a,b)=>new Date(b.ts)-new Date(a.ts)).map(e=>`<div class="entry"><div class="entryTop"><strong>${fmtDate(e.ts)}</strong>${riskTag(e.risk)}</div><div class="note">Flags: ${e.flags.length?e.flags.join(', '):'none'}<br>Causes: ${e.causes.length?e.causes.join(', '):'none'}<br>Notes: ${e.notes || 'none'}</div></div>`).join('') : '<div class="small">No saved entries yet.</div>';
+}
+function submitCheckin(){
+  const patient = getPatient(currentPatientId);
+  for(const q of QUESTIONS){ if(!draftAnswers[q.key]) return alert('Please answer all five FAM-CAM questions.'); }
+  const notes = document.getElementById('caregiverNotes').value.trim();
+  const entry = { ts: new Date().toISOString(), answers: {...draftAnswers}, flags:[...draftFlags], causes:[...draftCauses], notes, risk: calcRisk(draftAnswers, [...draftFlags]) };
+  patient.entries.push(entry); saveDB(); resetCheckinForm(); renderCaregiver(); alert('Check-in saved to patient history.');
+}
+function copyDoctorNote(){ navigator.clipboard.writeText(document.getElementById('doctorNote').value); }
+function copyDocSummary(){ navigator.clipboard.writeText(document.getElementById('docSummary').value); }
+function renderDoctor(){
+  const doctor = db.doctors.find(d=>d.id===currentDoctorId); const patients = doctor.patientIds.map(getPatient).filter(Boolean);
+  document.getElementById('statPatients').textContent = patients.length;
+  document.getElementById('statRed').textContent = patients.filter(p=>latestEntry(p)?.risk==='red').length;
+  document.getElementById('statAmber').textContent = patients.filter(p=>latestEntry(p)?.risk==='amber').length;
+  const now = Date.now(); document.getElementById('statRecent').textContent = patients.reduce((n,p)=>n+p.entries.filter(e=>now-new Date(e.ts).getTime()<7*24*3600*1000).length,0);
+  document.getElementById('doctorPatientList').innerHTML = patients.map(p=>{ const latest=latestEntry(p); return `<button class="patientCard ${p.id===currentDoctorPatientId?'active':''}" onclick="selectDoctorPatient('${p.id}')"><strong>${p.name}</strong><div class="small">${p.mrn}</div><div class="pillRow" style="margin-top:8px">${latest ? riskTag(latest.risk) : ''}<span class="tag blue">${latest ? fmtDate(latest.ts) : 'No data'}</span></div></button>`; }).join('');
+  renderDoctorPatient();
+}
+function selectDoctorPatient(id){ currentDoctorPatientId=id; renderDoctor(); }
+function renderDoctorPatient(){
+  const p = getPatient(currentDoctorPatientId); const latest = latestEntry(p);
+  document.getElementById('docPatientName').textContent = p.name;
+  document.getElementById('docMRN').textContent = p.mrn;
+  document.getElementById('docCaregiver').textContent = `${p.caregiverName} (${p.caregiverRelation}) · ${p.caregiverPhone}`;
+  document.getElementById('docRisk').textContent = p.baselineRisk;
+  document.getElementById('docLastSubmission').textContent = latest ? fmtDate(latest.ts) : 'No submissions';
+  document.getElementById('docStatus').innerHTML = latest ? riskTag(latest.risk) : '<span class="small">No status</span>';
+  document.getElementById('docSummary').value = latest ? buildDoctorNote(p, latest) : '';
+  document.getElementById('doctorEntriesTable').innerHTML = [...p.entries].sort((a,b)=>new Date(b.ts)-new Date(a.ts)).map(e=>`<tr><td>${fmtDate(e.ts)}</td><td>${riskTag(e.risk)}</td><td>${summarizeFindings(e)}</td><td>${e.causes.length?e.causes.join(', '):'none'}</td></tr>`).join('');
+}
+function summarizeFindings(e){
+  const findings=[]; if(e.answers.q1==='yes') findings.push('acute onset'); if(e.answers.q2==='yes') findings.push('inattention'); if(e.answers.q3==='yes') findings.push('disorganized thinking'); if(e.answers.q4==='drowsy') findings.push('hypoactive pattern'); if(e.answers.q4==='agitated') findings.push('hyperactive pattern'); if(e.answers.q5==='yes') findings.push('fluctuating course'); return findings.length?findings.join(', '):'no major positive findings';
+}
+
+selectRole('caregiver', document.querySelector('[data-role="caregiver"]'));
+</script>
+</body>
+</html>
