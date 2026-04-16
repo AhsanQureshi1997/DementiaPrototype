@@ -83,6 +83,23 @@
   .opts{display:grid;gap:8px}
   .opt{padding:11px 13px;border:1.5px solid var(--border);border-radius:12px;background:#fff;text-align:left}
   .opt.sel,.opt:hover{border-color:var(--teal);background:var(--tealBg)}
+  .wizardTrack{display:flex;gap:6px;margin:14px 0 18px}
+  .wizardDot{height:4px;flex:1;border-radius:999px;background:#d8e1ea}
+  .wizardDot.done{background:var(--teal)}
+  .wizardDot.active{background:var(--navy)}
+  .wizardStep{display:none}
+  .wizardStep.active{display:block}
+  .wizardLabel{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);font-weight:600;margin-bottom:8px}
+  .wizardTitle{font-family:Lora,serif;font-size:26px;line-height:1.2;margin-bottom:8px}
+  .wizardSub{color:var(--muted);margin-bottom:18px}
+  .typeGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+  .typeCard{padding:14px;border:1px solid var(--border);border-radius:14px;background:#fbfdff}
+  .typeCard h4{font-size:14px;margin-bottom:8px}
+  .typeCard ul{padding-left:18px;color:var(--muted);font-size:14px}
+  .typeCard li{margin:4px 0}
+  .infoBox{padding:14px 16px;border-left:4px solid var(--blue);background:var(--blueBg);border-radius:0 12px 12px 0;color:var(--navy2);margin:14px 0 18px}
+  .wizardFooter{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  @media (max-width:960px){.typeGrid{grid-template-columns:1fr}}
   .alert{padding:16px 18px;border-radius:16px;margin-bottom:14px;border:1.5px solid var(--border)}
   .alert.red{background:var(--redBg);border-color:#f3c7c0}.alert.amber{background:var(--amberBg);border-color:#f4d7a9}.alert.green{background:var(--greenBg);border-color:#bfe6cb}
   .split{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}
@@ -170,10 +187,6 @@
           <h3>Family FAM-CAM screen</h3>
           <p class="muted">Answer based on how your loved one is acting right now compared with usual baseline.</p>
           <div id="questionsArea"></div>
-          <div class="actions">
-            <button class="btn primary" onclick="submitCheckin()">Save check-in</button>
-            <button class="btn secondary" onclick="resetCheckinForm()">Clear</button>
-          </div>
         </div>
       </div>
 
@@ -333,6 +346,7 @@ let currentDoctorPatientId = null;
 let draftAnswers = {};
 let draftFlags = new Set();
 let draftCauses = new Set();
+let currentCheckinStep = 1;
 
 function loadDB(){
   try{
@@ -382,32 +396,89 @@ function getActions(risk){
 }
 function renderQuestions(){
   const area = document.getElementById('questionsArea');
-  area.innerHTML = QUESTIONS.map(q => `
-    <div class="question ${draftAnswers[q.key] ? 'answered' : ''}">
-      <div class="qtitle">${q.title}</div>
-      <div class="qhint">${q.hint}</div>
-      <div class="opts">${q.options.map(([v,l]) => `<button class="opt ${draftAnswers[q.key]===v?'sel':''}" onclick="setAnswer('${q.key}','${v}')">${l}</button>`).join('')}</div>
-    </div>`).join('') + `
-    <div class="question">
-      <div class="qtitle">Urgency factors</div>
-      <div class="qhint">Select any that apply right now.</div>
-      <div class="opts">${FLAG_OPTIONS.map(v => `<button class="opt ${draftFlags.has(v)?'sel':''}" onclick="toggleFlag('${v.replace(/'/g,"\\'")}')">${v}</button>`).join('')}</div>
+  const notesVal = document.getElementById('caregiverNotes')?.value || '';
+  area.innerHTML = `
+    <div class="wizardTrack">
+      <div class="wizardDot ${currentCheckinStep>1?'done':currentCheckinStep===1?'active':''}"></div>
+      <div class="wizardDot ${currentCheckinStep>2?'done':currentCheckinStep===2?'active':''}"></div>
+      <div class="wizardDot ${currentCheckinStep===3?'active':''}"></div>
     </div>
-    <div class="question">
-      <div class="qtitle">Possible causes</div>
-      <div class="qhint">Select anything that might explain the change.</div>
-      <div class="opts">${CAUSE_OPTIONS.map(v => `<button class="opt ${draftCauses.has(v)?'sel':''}" onclick="toggleCause('${v.replace(/'/g,"\\'")}')">${v}</button>`).join('')}</div>
+
+    <div class="wizardStep ${currentCheckinStep===1?'active':''}">
+      <div class="wizardLabel">Getting started</div>
+      <div class="wizardTitle">You know your loved one best</div>
+      <div class="wizardSub">If something seems off after a hospital stay or illness, this screen helps you check for delirium and decide what to do next.</div>
+      <div class="infoBox"><strong>What is delirium?</strong> Delirium is a sudden change in attention, thinking, or alertness caused by a medical problem. It is not the same as dementia, and it can be missed in outpatient follow-up.</div>
+      <div class="typeGrid">
+        <div class="typeCard">
+          <h4>Hyperactive pattern</h4>
+          <ul><li>Agitated or restless</li><li>Picking at clothes or objects</li><li>Saying unusual things</li><li>More reactive than usual</li></ul>
+        </div>
+        <div class="typeCard">
+          <h4>Hypoactive pattern</h4>
+          <ul><li>Very sleepy</li><li>Hard to wake</li><li>Blank staring</li><li>Much quieter than usual</li></ul>
+        </div>
+      </div>
+      <div class="infoBox"><strong>Important:</strong> The sleepy, quiet form is common and easy to miss. Families often notice this first.</div>
+      <div class="wizardFooter">
+        <button class="btn primary" onclick="goCheckinStep(2)">Start the check-in</button>
+      </div>
     </div>
-    <div class="question">
-      <div class="qtitle">Caregiver notes</div>
-      <div class="qhint">Add anything the clinic should know.</div>
-      <textarea id="caregiverNotes" placeholder="Example: more confused at night, missed two meals, hard to wake this morning."></textarea>
+
+    <div class="wizardStep ${currentCheckinStep===2?'active':''}">
+      <div class="wizardLabel">Step 1 of 2</div>
+      <div class="wizardTitle">Today's recognition check</div>
+      <div class="wizardSub">Answer based on what you are seeing right now compared with usual baseline.</div>
+      ${QUESTIONS.map(q => `
+        <div class="question ${draftAnswers[q.key] ? 'answered' : ''}">
+          <div class="qtitle">${q.title}</div>
+          <div class="qhint">${q.hint}</div>
+          <div class="opts">${q.options.map(([v,l]) => `<button class="opt ${draftAnswers[q.key]===v?'sel':''}" onclick="setAnswer('${q.key}','${v}')">${l}</button>`).join('')}</div>
+        </div>`).join('')}
+      <div class="wizardFooter">
+        <button class="btn secondary" onclick="goCheckinStep(1)">Back</button>
+        <button class="btn primary" onclick="goCheckinStep(3)">Continue</button>
+      </div>
+    </div>
+
+    <div class="wizardStep ${currentCheckinStep===3?'active':''}">
+      <div class="wizardLabel">Step 2 of 2</div>
+      <div class="wizardTitle">Urgency and notes</div>
+      <div class="wizardSub">Add any urgent features, likely causes, and a short caregiver note.</div>
+      <div class="question">
+        <div class="qtitle">Urgency factors</div>
+        <div class="qhint">Select any that apply right now.</div>
+        <div class="opts">${FLAG_OPTIONS.map(v => `<button class="opt ${draftFlags.has(v)?'sel':''}" onclick="toggleFlag(${JSON.stringify(v)})">${v}</button>`).join('')}</div>
+      </div>
+      <div class="question">
+        <div class="qtitle">Possible causes</div>
+        <div class="qhint">Select anything that might be contributing.</div>
+        <div class="opts">${CAUSE_OPTIONS.map(v => `<button class="opt ${draftCauses.has(v)?'sel':''}" onclick="toggleCause(${JSON.stringify(v)})">${v}</button>`).join('')}</div>
+      </div>
+      <div class="question">
+        <div class="qtitle">Caregiver notes</div>
+        <div class="qhint">Add anything the clinic should know.</div>
+        <textarea id="caregiverNotes" placeholder="Example: more confused at night, missed two meals, hard to wake this morning.">${notesVal}</textarea>
+      </div>
+      <div class="wizardFooter">
+        <button class="btn secondary" onclick="goCheckinStep(2)">Back</button>
+        <button class="btn secondary" onclick="resetCheckinForm()">Clear</button>
+        <button class="btn primary" onclick="submitCheckin()">Save check-in</button>
+      </div>
     </div>`;
+}
+function goCheckinStep(step){
+  if(step===3){
+    for(const q of QUESTIONS){ if(!draftAnswers[q.key]) return alert('Please answer all five FAM-CAM questions before continuing.'); }
+  }
+  currentCheckinStep = step;
+  currentCheckinStep = 1;
+  renderQuestions();
 }
 function setAnswer(k,v){ draftAnswers[k]=v; const notes = document.getElementById('caregiverNotes')?.value || ''; renderQuestions(); const noteEl = document.getElementById('caregiverNotes'); if(noteEl) noteEl.value = notes; }
 function toggleFlag(v){ draftFlags.has(v)?draftFlags.delete(v):draftFlags.add(v); const notes=document.getElementById('caregiverNotes')?.value||''; renderQuestions(); document.getElementById('caregiverNotes').value=notes; }
 function toggleCause(v){ draftCauses.has(v)?draftCauses.delete(v):draftCauses.add(v); const notes=document.getElementById('caregiverNotes')?.value||''; renderQuestions(); document.getElementById('caregiverNotes').value=notes; }
-function resetCheckinForm(){ draftAnswers={}; draftFlags=new Set(); draftCauses=new Set(); renderQuestions(); }
+function resetCheckinForm(){ draftAnswers={}; draftFlags=new Set(); draftCauses=new Set(); currentCheckinStep=1; renderQuestions(); }
 function renderCaregiver(){
   const patient = getPatient(currentPatientId); const latest = latestEntry(patient);
   document.getElementById('cgPatientName').textContent = patient.name;
